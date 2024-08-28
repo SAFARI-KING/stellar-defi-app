@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { 
-  Button, 
-  TextField, 
-  Typography, 
-  Paper, 
-  Grid, 
+import {
+  Button,
+  TextField,
+  Typography,
+  Paper,
+  Grid,
   Box,
   CircularProgress,
-  Link
+  Link,
+  Container,
+  Divider
 } from '@mui/material';
 import {
   Keypair,
@@ -35,7 +37,7 @@ function App() {
     generateKeypair: false,
     fundAccount: false,
     createLiquidityPool: false,
-    withdrawFromPool: false
+    withdrawFromPool: false,
   });
 
   const addLog = (message) => {
@@ -43,11 +45,11 @@ function App() {
   };
 
   const generateKeypair = () => {
-    setLoading(prev => ({ ...prev, generateKeypair: true }));
+    setLoading((prev) => ({ ...prev, generateKeypair: true }));
     const newKeypair = Keypair.random();
     setKeypair(newKeypair);
     addLog(`Generated new keypair. Public key: ${newKeypair.publicKey()}`);
-    setLoading(prev => ({ ...prev, generateKeypair: false }));
+    setLoading((prev) => ({ ...prev, generateKeypair: false }));
   };
 
   const fundAccount = async () => {
@@ -56,7 +58,7 @@ function App() {
       return;
     }
 
-    setLoading(prev => ({ ...prev, fundAccount: true }));
+    setLoading((prev) => ({ ...prev, fundAccount: true }));
     const friendbotUrl = `https://friendbot.stellar.org?addr=${keypair.publicKey()}`;
     try {
       const response = await fetch(friendbotUrl);
@@ -68,7 +70,7 @@ function App() {
     } catch (error) {
       addLog(`Error funding account ${keypair.publicKey()}: ${error.message}`);
     }
-    setLoading(prev => ({ ...prev, fundAccount: false }));
+    setLoading((prev) => ({ ...prev, fundAccount: false }));
   };
 
   const createLiquidityPool = async () => {
@@ -77,7 +79,7 @@ function App() {
       return;
     }
 
-    setLoading(prev => ({ ...prev, createLiquidityPool: true }));
+    setLoading((prev) => ({ ...prev, createLiquidityPool: true }));
     try {
       const account = await server.getAccount(keypair.publicKey());
       const customAsset = new Asset(assetName, keypair.publicKey());
@@ -87,26 +89,40 @@ function App() {
 
       const transaction = new TransactionBuilder(account, {
         fee: BASE_FEE,
-        networkPassphrase: Networks.TESTNET
+        networkPassphrase: Networks.TESTNET,
       })
         .addOperation(Operation.changeTrust({ asset: lpAsset }))
-        .addOperation(Operation.liquidityPoolDeposit({
-          liquidityPoolId: lpId,
-          maxAmountA: tokenAAmount,
-          maxAmountB: tokenBAmount,
-          minPrice: { n: 1, d: 1 },
-          maxPrice: { n: 1, d: 1 }
-        }))
+        .addOperation(
+          Operation.liquidityPoolDeposit({
+            liquidityPoolId: lpId,
+            maxAmountA: tokenAAmount,
+            maxAmountB: tokenBAmount,
+            minPrice: { n: 1, d: 1 },
+            maxPrice: { n: 1, d: 1 },
+          })
+        )
         .setTimeout(30)
         .build();
 
       transaction.sign(keypair);
       const result = await server.sendTransaction(transaction);
-      addLog(<>Liquidity Pool created. Transaction URL: <Link href={`https://stellar.expert/explorer/testnet/tx/${result.hash}`} target="_blank" rel="noopener noreferrer">View Transaction</Link></>);
+      addLog(
+        <>
+          Liquidity Pool created. Transaction URL:{' '}
+          <Link
+            href={`https://stellar.expert/explorer/testnet/tx/${result.hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            color="secondary"
+          >
+            View Transaction
+          </Link>
+        </>
+      );
     } catch (error) {
       addLog(`Error creating Liquidity Pool: ${error.message}`);
     }
-    setLoading(prev => ({ ...prev, createLiquidityPool: false }));
+    setLoading((prev) => ({ ...prev, createLiquidityPool: false }));
   };
 
   const withdrawFromPool = async () => {
@@ -115,128 +131,150 @@ function App() {
       return;
     }
 
-    setLoading(prev => ({ ...prev, withdrawFromPool: true }));
+    setLoading((prev) => ({ ...prev, withdrawFromPool: true }));
     try {
       const account = await server.getAccount(keypair.publicKey());
       const transaction = new TransactionBuilder(account, {
         fee: BASE_FEE,
-        networkPassphrase: Networks.TESTNET
+        networkPassphrase: Networks.TESTNET,
       })
-        .addOperation(Operation.liquidityPoolWithdraw({
-          liquidityPoolId: liquidityPoolId,
-          amount: withdrawAmount,
-          minAmountA: '0',
-          minAmountB: '0'
-        }))
+        .addOperation(
+          Operation.liquidityPoolWithdraw({
+            liquidityPoolId: liquidityPoolId,
+            amount: withdrawAmount,
+            minAmountA: '0',
+            minAmountB: '0',
+          })
+        )
         .setTimeout(30)
         .build();
 
       transaction.sign(keypair);
       const result = await server.sendTransaction(transaction);
-      addLog(<>Withdrawal successful. Transaction URL: <Link href={`https://stellar.expert/explorer/testnet/tx/${result.hash}`} target="_blank" rel="noopener noreferrer">View Transaction</Link></>);
+      addLog(
+        <>
+          Withdrawal successful. Transaction URL:{' '}
+          <Link
+            href={`https://stellar.expert/explorer/testnet/tx/${result.hash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            color="secondary"
+          >
+            View Transaction
+          </Link>
+        </>
+      );
     } catch (error) {
       addLog(`Error withdrawing from Liquidity Pool: ${error.message}`);
     }
-    setLoading(prev => ({ ...prev, withdrawFromPool: false }));
+    setLoading((prev) => ({ ...prev, withdrawFromPool: false }));
   };
 
   return (
-    <Box sx={{ flexGrow: 1, p: 3 }}>
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Typography variant="h4" gutterBottom>
-            EkoLance Liquidity Pool on Stellar 💰
-          </Typography>
+    <Container maxWidth="md" sx={{ mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, bgcolor: '#f5f5f5' }}>
+        <Typography
+          variant="h4"
+          sx={{ color: '#2e7d32', fontWeight: 'bold', mb: 2, textAlign: 'center' }}
+        >
+          Simple DeFi Liquidity Pool
+        </Typography>
+        <Divider sx={{ my: 2 }} />
+        <Grid container spacing={4}>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, bgcolor: '#ffffff' }} elevation={2}>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={generateKeypair}
+                fullWidth
+                disabled={loading.generateKeypair}
+                sx={{ mb: 2 }}
+              >
+                {loading.generateKeypair ? <CircularProgress size={24} /> : 'Generate Keypair'}
+              </Button>
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={fundAccount}
+                fullWidth
+                disabled={loading.fundAccount}
+                sx={{ mb: 3 }}
+              >
+                {loading.fundAccount ? <CircularProgress size={24} /> : 'Fund Account'}
+              </Button>
+              <TextField
+                label="Asset Name"
+                value={assetName}
+                onChange={(e) => setAssetName(e.target.value)}
+                fullWidth
+                margin="normal"
+              />
+              <TextField
+                label="Token A Amount (XLM)"
+                value={tokenAAmount}
+                onChange={(e) => setTokenAAmount(e.target.value)}
+                fullWidth
+                margin="normal"
+                type="number"
+              />
+              <TextField
+                label="Token B Amount (Custom Asset)"
+                value={tokenBAmount}
+                onChange={(e) => setTokenBAmount(e.target.value)}
+                fullWidth
+                margin="normal"
+                type="number"
+              />
+              <Button
+                variant="contained"
+                color="success"
+                onClick={createLiquidityPool}
+                fullWidth
+                disabled={loading.createLiquidityPool}
+                sx={{ mt: 2, bgcolor: '#2e7d32' }}
+              >
+                {loading.createLiquidityPool ? <CircularProgress size={24} /> : 'Create Liquidity Pool'}
+              </Button>
+              <TextField
+                label="Liquidity Pool ID"
+                value={liquidityPoolId}
+                onChange={(e) => setLiquidityPoolId(e.target.value)}
+                fullWidth
+                margin="normal"
+                sx={{ mt: 2 }}
+              />
+              <TextField
+                label="Withdraw Amount"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                fullWidth
+                margin="normal"
+                type="number"
+              />
+              <Button
+                variant="contained"
+                color="warning"
+                onClick={withdrawFromPool}
+                fullWidth
+                disabled={loading.withdrawFromPool}
+                sx={{ mt: 2 }}
+              >
+                {loading.withdrawFromPool ? <CircularProgress size={24} /> : 'Withdraw from Pool'}
+              </Button>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Paper sx={{ p: 3, bgcolor: '#e8f5e9', maxHeight: 400, overflow: 'auto' }} elevation={2}>
+              <Typography variant="h6" gutterBottom sx={{ color: '#388e3c' }}>
+                Latest Log
+              </Typography>
+              <Typography variant="body2">{log}</Typography>
+            </Paper>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2 }}>
-            <Button 
-              variant="contained" 
-              onClick={generateKeypair} 
-              fullWidth 
-              disabled={loading.generateKeypair}
-            >
-              {loading.generateKeypair ? <CircularProgress size={24} /> : 'Generate Keypair'}
-            </Button>
-            <Button 
-              variant="contained" 
-              onClick={fundAccount} 
-              fullWidth 
-              sx={{ mt: 2 }}
-              disabled={loading.fundAccount}
-            >
-              {loading.fundAccount ? <CircularProgress size={24} /> : 'Fund Account'}
-            </Button>
-            <TextField
-              label="Asset Name"
-              value={assetName}
-              onChange={(e) => setAssetName(e.target.value)}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Token A Amount (XLM)"
-              value={tokenAAmount}
-              onChange={(e) => setTokenAAmount(e.target.value)}
-              fullWidth
-              margin="normal"
-              type="number"
-            />
-            <TextField
-              label="Token B Amount (Custom Asset)"
-              value={tokenBAmount}
-              onChange={(e) => setTokenBAmount(e.target.value)}
-              fullWidth
-              margin="normal"
-              type="number"
-            />
-            <Button 
-              variant="contained" 
-              onClick={createLiquidityPool} 
-              fullWidth 
-              sx={{ mt: 2 }}
-              disabled={loading.createLiquidityPool}
-            >
-              {loading.createLiquidityPool ? <CircularProgress size={24} /> : 'Create Liquidity Pool'}
-            </Button>
-            <TextField
-              label="Liquidity Pool ID"
-              value={liquidityPoolId}
-              onChange={(e) => setLiquidityPoolId(e.target.value)}
-              fullWidth
-              margin="normal"
-            />
-            <TextField
-              label="Withdraw Amount"
-              value={withdrawAmount}
-              onChange={(e) => setWithdrawAmount(e.target.value)}
-              fullWidth
-              margin="normal"
-              type="number"
-            />
-            <Button 
-              variant="contained" 
-              onClick={withdrawFromPool} 
-              fullWidth 
-              sx={{ mt: 2 }}
-              disabled={loading.withdrawFromPool}
-            >
-              {loading.withdrawFromPool ? <CircularProgress size={24} /> : 'Withdraw from Pool'}
-            </Button>
-          </Paper>
-        </Grid>
-        <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 2, maxHeight: 400, overflow: 'auto' }}>
-            <Typography variant="h6" gutterBottom>
-              Latest Log
-            </Typography>
-            <Typography variant="body2">
-              {log}
-            </Typography>
-          </Paper>
-        </Grid>
-      </Grid>
-    </Box>
+      </Paper>
+    </Container>
   );
 }
 
