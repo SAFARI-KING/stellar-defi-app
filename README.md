@@ -1,8 +1,10 @@
-# React + Vite
+# Stellar DeFi Liquidity Pool
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a simple yet effective liquidity pool dApp built on the Stellar blockchain (testnet). It provides users with the ability to add and remove liquidity in a streamlined interface.
 
-Currently, two official plugins are available:
+## Explore the Deployed App
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Check out the live version of the app here: [Stellar DeFi Liquidity Pool](https://stellar-defi-app--woad.vercel.app/)
+
+
+
